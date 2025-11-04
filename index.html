@@ -98,20 +98,22 @@
 			40217 Düsseldorf
 		</cost-header>
 
-		<div class="absender">
-			<span>Name:</span>
-			<input id="name">
-			<span>E-Mail:</span>
-			<input id="email" type="email">
-			<span>Straße:</span>
-			<input id="strasse">
-			<span>Telefon:</span>
-			<input id="telefon" type="tel">
-			<span>PLZ, Ort:</span>
-			<input id="plzort">
-			<span>IBAN:</span>
-			<input id="iban">
-		</div>
+		<form autocomplete="on">
+			<div class="absender">
+				<span>Name:</span>
+				<input id="name" name="name" autocomplete="name">
+				<span>E-Mail:</span>
+				<input id="email" name="email" type="email" autocomplete="email">
+				<span>Straße:</span>
+				<input id="street" name="street" autocomplete="address-line1">
+				<span>Telefon:</span>
+				<input id="tel" name="tel" type="tel" autocomplete="tel">
+				<span>PLZ, Ort:</span>
+				<input id="plzort">
+				<span>IBAN:</span>
+				<input id="iban">
+			</div>
+		</form>
 
 		<div class="veranstaltung">
 			<span>Kurs / Veranstaltung:</span>
