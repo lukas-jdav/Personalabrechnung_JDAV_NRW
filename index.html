@@ -257,7 +257,7 @@
 				`
 				total({ props, $ }) {
 					const tage = parseNumber($("#tage").value, { maxDecimalPlaces: 2 })
-					return tage * props.centsProTag
+					return Math.round(tage * props.centsProTag)
 				}
 			}
 
