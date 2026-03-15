@@ -10,12 +10,16 @@
 	<link rel="stylesheet" type="text/css" href="lib/style.css">
 	<script src="lib/cost.js"></script>
 	<style type="text/css">
-		#button-formular-standard,
-		#button-formular-teamer {
+		#formular-switch {
 			position: absolute;
 			top: -1.75em;
 			right: 3em;
 			font-size: 0.9em;
+			display: flex;
+			gap: 1em;
+		}
+
+		#formular-switch span {
 			color: rgba(0 100 0 / 0.5);
 			cursor: pointer;
 		}
@@ -25,6 +29,10 @@
 		}
 
 		body:not([data-formular-version="teamer"]) .formular-version-teamer {
+			display: none;
+		}
+
+		body:not([data-formular-version="personal"]) .formular-version-personal {
 			display: none;
 		}
 
@@ -60,36 +68,10 @@
 
 <body data-formular-version="standard">
 	<main>
-		<div id="button-formular-teamer" class="formular-version-standard noprint">
-			Zur Teamer*innen-Version
-			<script>
-				document.querySelector("#button-formular-teamer").addEventListener("click", () => {
-					const url = new URL(window.location.href)
-					url.searchParams.set('team', '')
-					window.history.pushState(null, '', url.toString())
-
-					document.querySelector("body").setAttribute("data-formular-version", "teamer")
-					document.title = 'Team-' + document.title
-				})
-			</script>
-		</div>
-		<div id="button-formular-standard" class="formular-version-teamer noprint">
-			Zur Standard-Version
-			<script>
-				document.querySelector("#button-formular-standard").addEventListener("click", () => {
-					// Der Einfachheit halber laden wir die Seite neu anstatt die betreffenden
-					// Elemente dynamisch zu entfernen. Der URL-Query-Parameter muss vorher entfernt werden.
-					if (!window.confirm("Alle Eingaben werden gelöscht! Fortfahren?")) {
-						return;
-					}
-					const url = new URL(window.location.href)
-					url.searchParams.delete('team')
-					window.history.pushState(null, '', url.toString())
-
-					window.onbeforeunload = null
-					window.location.reload()
-				})
-			</script>
+		<div id="formular-switch" class="noprint">
+			<span id="switch-standard" class="formular-version-teamer formular-version-personal">Standard-Version</span>
+			<span id="switch-teamer" class="formular-version-standard formular-version-personal">Teamer*innen-Version</span>
+			<span id="switch-personal" class="formular-version-standard formular-version-teamer">Personal-Version</span>
 		</div>
 
 		<cost-header heading="Abrechnung" img="logo.svg">
@@ -123,11 +105,52 @@
 		</div>
 
 		<script>
+			const originalTitle = document.title.replace(/^(Team-|Personal-)/, "")
+
+			function setFormVersion(version) {
+				document.body.setAttribute("data-formular-version", version)
+				if (version === "teamer") {
+					document.title = "Team-" + originalTitle
+				} else if (version === "personal") {
+					document.title = "Personal-" + originalTitle
+				} else {
+					document.title = originalTitle
+				}
+			}
+
+			function updateUrl(param) {
+				const url = new URL(window.location.href)
+				url.searchParams.delete("team")
+				url.searchParams.delete("personal")
+				if (param) {
+					url.searchParams.set(param, "")
+				}
+				window.history.pushState(null, "", url.toString())
+			}
+
 			const urlParams = new URLSearchParams(window.location.search)
 			if (urlParams.has("team")) {
-				document.querySelector("body").setAttribute("data-formular-version", "teamer")
-				document.title = 'Team-' + document.title
+				setFormVersion("teamer")
+			} else if (urlParams.has("personal")) {
+				setFormVersion("personal")
 			}
+
+			document.querySelector("#switch-standard").addEventListener("click", () => {
+				if (!window.confirm("Alle Eingaben werden gelöscht! Fortfahren?")) return;
+				updateUrl(null)
+				window.onbeforeunload = null
+				window.location.reload()
+			})
+
+			document.querySelector("#switch-teamer").addEventListener("click", () => {
+				updateUrl("team")
+				setFormVersion("teamer")
+			})
+
+			document.querySelector("#switch-personal").addEventListener("click", () => {
+				updateUrl("personal")
+				setFormVersion("personal")
+			})
 
 			class Auslage extends CostKind {
 				template = `
@@ -307,6 +330,32 @@
 					return Math.round(Math.ceil(tage / 4) * anteil * props.centsProTag)
 				}
 			}
+
+			class VerpflegungsMehrkosten extends CostKind {
+				template = `
+					<style>
+						#tage, #satz {
+							width: 10ch;
+							text-align: right;
+						}
+						#satz {
+							margin-left: 1em;
+						}
+						#anmerkung {
+							width: 40ch;
+							margin-left: 1em;
+						}
+					</style>
+					<input id="tage" placeholder="0"> Tage
+					<input id="satz" placeholder="0,00"> € / Tag
+					<input id="anmerkung" maxlength="50" class="optional" placeholder="z. B. Anreise / ganzer Tag / Abreise">
+				`
+				total({ $ }) {
+					const tage = parseNumber($("#tage").value, { maxDecimalPlaces: 2 })
+					const satz = parseAmount($("#satz").value)
+					return Math.round(tage * satz)
+				}
+			}
 		</script>
 
 		<cost-section heading="Fahrtkosten" id="fahrtkosten">
@@ -361,13 +410,47 @@
 			</div>
 			<script>
 				document.querySelector("#auslagen").registerOptions([
+					new Auslage("Hotel / Unterkunft"),
 					new Auslage("Einkäufe"),
 					new Auslage("Sonstiges"),
 				])
 			</script>
 		</cost-section>
 
-		<cost-footer connect-ids="honorar fahrtkosten auslagen">
+		<cost-section heading="Verpflegungsmehrkosten" id="verpflegung" class="formular-version-personal">
+			<div class="hint">
+				Bitte die geltenden Pauschalen eintragen.
+			</div>
+			<script>
+				document.querySelector("#verpflegung").registerOptions([
+					new VerpflegungsMehrkosten("Verpflegungsmehraufwand"),
+				])
+			</script>
+		</cost-section>
+
+		<cost-footer connect-ids="fahrtkosten auslagen" class="formular-version-standard">
+			<p class="hint">
+				Bitte alle Belege einscannen/abfotografieren und <strong><u>digital</u></strong> dem PDF anhängen oder als Anhang mitschicken (an <a href="mailto:info@jdav-nrw.de">info@jdav-nrw.de</a>).
+			</p>
+			<p class="hint">
+				Es gilt eine <strong><u>Frist von 2 Wochen</u></strong> nach Veranstaltungsende für das Einreichen deiner Abrechnung.
+				Nach Überschreiten der Frist wird eine Gebühr von 50 € einbehalten (jedoch maximal der Gesamtbetrag).
+				Nach 8 Wochen wird nichts mehr erstattet. Wenn du absehbar mehr Zeit benötigst, melde dich rechtzeitig für eine Fristverlängerung bei uns.
+			</p>
+		</cost-footer>
+
+		<cost-footer connect-ids="honorar fahrtkosten auslagen" class="formular-version-teamer">
+			<p class="hint">
+				Bitte alle Belege einscannen/abfotografieren und <strong><u>digital</u></strong> dem PDF anhängen oder als Anhang mitschicken (an <a href="mailto:info@jdav-nrw.de">info@jdav-nrw.de</a>).
+			</p>
+			<p class="hint">
+				Es gilt eine <strong><u>Frist von 2 Wochen</u></strong> nach Veranstaltungsende für das Einreichen deiner Abrechnung.
+				Nach Überschreiten der Frist wird eine Gebühr von 50 € einbehalten (jedoch maximal der Gesamtbetrag).
+				Nach 8 Wochen wird nichts mehr erstattet. Wenn du absehbar mehr Zeit benötigst, melde dich rechtzeitig für eine Fristverlängerung bei uns.
+			</p>
+		</cost-footer>
+
+		<cost-footer connect-ids="fahrtkosten verpflegung auslagen" class="formular-version-personal">
 			<p class="hint">
 				Bitte alle Belege einscannen/abfotografieren und <strong><u>digital</u></strong> dem PDF anhängen oder als Anhang mitschicken (an <a href="mailto:info@jdav-nrw.de">info@jdav-nrw.de</a>).
 			</p>
