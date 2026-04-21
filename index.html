@@ -201,7 +201,7 @@
 						}
 						.grid {
 							display: grid;
-							grid-template-columns: max-content minmax(14ch, 20ch) max-content minmax(10ch, 14ch);
+							grid-template-columns: max-content minmax(24ch, 1fr) max-content minmax(10ch, 14ch);
 							gap: 0.5em 0.75em;
 							align-items: center;
 						}
@@ -222,10 +222,13 @@
 						.country-value {
 							font-weight: bold;
 						}
-						#land-name,
-						#tagtyp {
+						#land-name {
 							width: 100%;
 							max-width: 20ch;
+						}
+						#tagtyp {
+							width: 100%;
+							min-width: 24ch;
 						}
 						#anzahl,
 						#satz-frei-partial,
