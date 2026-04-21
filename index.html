@@ -201,7 +201,7 @@
 						}
 						.grid {
 							display: grid;
-							grid-template-columns: max-content minmax(24ch, 1fr) max-content minmax(10ch, 14ch);
+							grid-template-columns: max-content minmax(0, 30ch) max-content minmax(10ch, 14ch);
 							gap: 0.5em 0.75em;
 							align-items: center;
 						}
@@ -227,8 +227,8 @@
 							max-width: 20ch;
 						}
 						#tagtyp {
-							width: 100%;
-							min-width: 24ch;
+							width: 30ch;
+							max-width: 100%;
 						}
 						#anzahl,
 						#satz-frei-partial,
@@ -295,7 +295,7 @@
 						<div class="grid">
 							<label for="tagtyp">Tagestyp</label>
 							<select id="tagtyp">
-								<option value="partial" selected>An-/Abreise bzw. &gt; 8 Stunden</option>
+								<option value="partial" selected>An-/Abreise bzw. &gt; 8 Std.</option>
 								<option value="full">24 Stunden</option>
 							</select>
 
