@@ -283,10 +283,6 @@
 					</style>
 
 					<div class="wrapper">
-						<div class="country-line" id="country-line-de">
-							<span>Land</span>
-							<span class="country-value">Deutschland</span>
-						</div>
 						<div class="country-line" id="country-line-other" hidden>
 							<label for="land-name">Land</label>
 							<input id="land-name" placeholder="z. B. Österreich">
@@ -372,7 +368,6 @@
 					const isOther = this.isOtherCountry({ props })
 					const tagtyp = $("#tagtyp").value
 
-					$("#country-line-de").hidden = isOther
 					$("#country-line-other").hidden = !isOther
 					$("#freie-saetze-wrap").hidden = !isOther
 					$("#anzahl-wrap").hidden = tagtyp !== "full"
